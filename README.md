@@ -9,4 +9,4 @@ because it creates an armature, it is should be compatible with game engines lik
 based on a method shared by Pierrick Picaut on youtube. 
 https://www.youtube.com/watch?v=bzwp-ng-f1Y
 
-Right now, it's alittle unwieldy. but when it's done, it'll be as easy as copy pasting
+Right now, it's alittle unwieldy. but when it's done, it'll be as easy as copy and pasting
