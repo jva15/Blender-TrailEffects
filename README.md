@@ -1,4 +1,4 @@
-# TrailEffects
+# WIP TrailEffects
 **#WIP**  
 WOOPS! accidentaly pressed enter and commited prematurely.
 Won't be too long before it's alpha, until then help your self to some code bits.
