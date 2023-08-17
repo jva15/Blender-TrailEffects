@@ -1,8 +1,8 @@
 bl_info ={
     "name": "Trail Creator",
     "author" : "Geiger(aka jva15)",
-    "version": (0,0,2),
-    "blender": (3,0,0),
+    "version": (0,0,5),
+    "blender": (3,6,0),
     "category": "Effects",
     "location":"View3D > Toolshelf",
     "description":"Creates a Trail based on a bone and a preset",
