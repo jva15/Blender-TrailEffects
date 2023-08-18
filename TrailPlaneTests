@@ -1,6 +1,6 @@
 bl_info = {
-    "name": "New Object",
-    "author": "Your Name Here",
+    "name": "TrailTracer",
+    "author": "Geigernaught(jva15)",
     "version": (1, 0),
     "blender": (2, 80, 0),
     "location": "View3D > Add > Mesh > New Object",
@@ -19,8 +19,173 @@ from mathutils import Vector
 import time
 
 
+def add_material(self,context):
+    ts=trailshader=pby.data.materials.new(name="Trail Shader")
+    fnewnode=ts.node_tree.nodes.new
+    ts.use_nodes=True
+    ts.node_tree.nodes.remove(ts.node_tree.nodes.get('Principled BSDF'))
+    material_output =ts.node_tree.nodes.get('Material Output')
+    
+    
+    
+    def Generic_Node_Setup(node):
+        node.hide=True
+        node.select=False
+        return node
+    def MakeNode(node_data):#convert custom node data container to actual node, no connections yet
+        name=node_data[0]
+        data=node_data[1]
+        
+        newnode=fnewnode(name)
+        
+        
+        if name='ShaderNodeValToRGB':
+            elements=newnode.color_ramp.elements
+            elements.remove(elements[0])
+            remove_end=False#since i can't just delete both at the beggining, I'll use this variable to make sure i don't delete elements that were placed by the user.
+            
+            for k,v in data:
+                element=elements.new(k)
+                if !remove_end and k=1.0:
+                    remove_end=True
+                element.color=v
+            if remove_end:
+                elements.remove(elements[len(elements)-1])
+                
+        elif name='ShaderNodeTexImage':
+            for k,v in data:
+                if k=='image':
+                    newnode.image=bpy.data.images[v]
+        
+        else:#all other nodes
+            for k,v in data:
+                if k=='o':
+                    newnode.operation=v
+                elif k=='bt':
+                    newnode.blend_type=v
+                else:
+                    newnode.inputs[k].default_value=v
+            
+        
+        
+        return Generic_Node_Setup(newnode)
+        
+    
+    
+    
+    
+    lanes=[]
+    links=[]#just simple links
+    nodelanes=[]
+    
+    #make an array of lanes
+    #this is mostly to make it easier to sort them to mantain some semblenc of order in the node editor
+    #each lane contains a list of sets. each set holding a the type name and a dictionary.
+    #Dictionary processing depends on the MakeNode Function.
+    
+    #0
+    lanes.append([('ShaderNodeUVMap',{})])
+    #1
+    lanes.append([('ShaderNodeValue',{0:-0.063})])
+    #4
+    lanes.append([('ShaderNodeCombineXYZ',{}),
+     ('ShaderNodeMath',{'o':'MULTIPLY',1:1.1}),#operations
+     ('ShaderNodeCombineXYZ',{})])
+    #4
+    lanes.append([('ShaderNodeMapping',{}),('ShaderNodeMapping',{3:(1.0,1.4,1.0)})])   
+    #5
+    lanes.append([('ShaderNodeTexNoise',{2:2.1}),('ShaderNodeTexNoise',{2:2.1,5:0.35})])
+    #6 
+    lanes.append([('ShaderNodeMix',{0:0.167}),('ShaderNodeMix',{0:0.125})])
+    #7
+    lanes.append([('ShaderNodeMix',{'bt':0.167}),('ShaderNodeMix',{0:0.125})])
+    
+    
+    trailtex=bpy.data.textures.new("Trail_Texture","IMAGE")
+    trailtex.image=bpy.data.images.load('//../images/default_trail_texture.png')
+    
+    
+    trailmask=bpy.data.textures.new("Trail_Mask","IMAGE")
+    trailmask.image=bpy.data.images.load('//../images/default_trail_mask.png')
+    
+    
+    bpy.data.images["Trail_Texture"].source = 'FILE'
+    bpy.data.images["Trail_Mask"].source = 'FILE'
 
-def add_trailPlane(self, context,divisions=2,height=4):
+    
+    #8 images lanes
+    lanes.append([('ShaderNodeTexImage',{"Trail_Texture"}),
+    ('ShaderNodeTexImage',{"Trail_Mask"})])
+    
+
+    #9
+    lanes.append([('ShaderNodeMix',{})])
+    #10
+    lanes.append([('ShaderNodeMapRange',{}),('ShaderNodeValToRGB',{0.095:(0, 0.00175162, 8.3513, 1),0.659:(0.0559311, 3.67363, 4.67565, 1),1.000:(1,1,1,1)})])
+    
+    #11
+    lanes.append([('ShaderNodeBsdfTransparent',{}),('ShaderNodeEmission',{1:10})])
+    #12
+    lanes.append([('ShaderNodeMixShader',{})])
+    
+    
+    
+    #create the nodes
+    for node_array_data in lanes:
+        _lanedata=[]
+        for node_data in node_array_data:
+            lanedata.append(MakeNode(node_data))
+    
+        nodelanes=_lanedata
+    
+    
+    #now that we have the nodes, let's get them sorted
+    #
+    
+    #just to short hand
+    def nget(lane,number):
+        return nodelanes[lane][number]
+    link=ts.node_tree.links.new    
+    
+    #a helper function 
+    def multilink(node1,outputnumber,node2,inputnumbers):
+        for i in inputnumbers:
+            link(node1[outputnumber],node2[i])
+    #spacing being a set of coordinates(x,y)        
+    def highest(a,b):
+        if a >= b:
+            return a
+        else: 
+            return b
+    
+    #sort the nodes so that each lane represents a collumn with the given spacing
+    def sort(spacing=(0,0),lanes=[]):
+        x=0
+        y=0
+        
+        for lane in lanes:
+            highestdimx=0
+            y=0
+            for node in lane:
+                node.location=(x,y)
+                highestdimx=highest(node.dimensions[0])
+                y+=node.dimensions[1]+spacing[0]
+                
+            x+=highestdimx+spacing[1]   
+        
+    sort((20,5),nodelanes)
+    #
+    
+    
+    
+    
+    
+    
+    material_output.location=(400,0)
+    #ts.node_tree.nodes.add('name') "do an add and look at the type='name'"
+
+
+def add_trailPlane(self, context,divisions=2,height=2):
     subdivision_edge_factor=0.999
     
     #create, rotate, and apply rotation
@@ -88,7 +253,7 @@ def add_SwordTrailBones(self, context,divisions=2,height=2,length=2):
     
     
     
-    for i in range(4):
+    for i in range(number_of_bones):
         bpy.ops.armature.bone_primitive_add()
        
         
@@ -144,11 +309,11 @@ class OBJECT_OT_add_object(Operator, AddObjectHelper):
     )
 
     def execute(self, context):
-        blade_height=2
-        div=2
+        blade_height=4
+        div=8
 
-        trailPlane=add_trailPlane(self,context)
-        add_SwordTrailBones(self,context)
+        trailPlane=add_trailPlane(self,context,div,blade_height)
+        add_SwordTrailBones(self,context,div,blade_height,blade_height)
         
         
         return {'FINISHED'}
