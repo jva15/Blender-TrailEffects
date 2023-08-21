@@ -2,6 +2,8 @@
 **#WIP**  
 WOOPS! accidentaly pressed enter and commited prematurely.
 Won't be too long before it's alpha though.
+If your interested in this projects completion, 
+consider clicking the watch option to stay up to date.
 
 
 This plugin for Blender generates an armature based trail. Ideal for sword trails specifically. 
