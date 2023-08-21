@@ -9,4 +9,5 @@ because it creates an armature, it should be compatible with game engines like U
 based on a method shared by Pierrick Picaut on youtube. 
 https://www.youtube.com/watch?v=bzwp-ng-f1Y
 
-Right now, it's alittle unwieldy. but when it's done, it'll be as easy as copy and pasting
+please understand that this is not ready and it's littered with testing code.
+but when it's done, it'll be as easy as copy and pasting
