@@ -1,6 +1,6 @@
 # WIP TrailEffects
 **#WIP**  
-it should work, but I apparantly did the bl_info wrong so its not installable. give me some extra time to fix this.
+it should work, but I apparantly did the I bl_info wrong so its not installable. give me some extra time to fix this.
 If your interested in this projects completion, 
 consider clicking the watch option to stay up to date.
 
