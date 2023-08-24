@@ -1,11 +1,12 @@
 bl_info ={
-    "name": "TrailTracer",
+    "name": "Trail Tracer",
     "author" : "Geiger(aka jva15)",
-    "version": (0,0,5),
+    "version": (0,0,9),
     "blender": (3,6,0),
     "category": "Effects",
     "location":"View3D > Toolshelf",
-    "description":"Creates a Trail based on a bone and a preset",
+    "description":"A tool that allows for the creation of trails.
+    Access from the Effects tab",
     }
 import bpy
 

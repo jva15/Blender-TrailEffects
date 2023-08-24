@@ -17,9 +17,9 @@ from bpy.props import FloatVectorProperty
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from mathutils import Vector
 import time
+import pdb#for pdb.trace()
 
-
-def add_material(self,context):
+def add_material(self,context,Uflip=True,Vflip=False):
     
     trailshader=bpy.data.materials.new(name="Trail Shader Test")
     
@@ -139,8 +139,8 @@ def add_material(self,context):
     #5  Note: output changes based on mode: Float: 0, Vector:1,Color2
     #lanes.append([('ShaderNodeMix',{0:0.167}),('ShaderNodeMix',{0:0.125})])
     lanes.append([('ShaderNodeMix',{0:0.167,'data_type':'RGBA'}),('ShaderNodeMix',{0:0.125,'data_type':'RGBA'})])
-    nlinks.append([(5,0,2),(6,0,0)])
-    nlinks.append([(5,1,2),(6,1,0)])
+    nlinks.append([(5,0,2),(6,2,0)])
+    nlinks.append([(5,1,2),(6,2,0)])
     
     
     
@@ -171,11 +171,30 @@ def add_material(self,context):
     #bpy.data.images["Trail_Mask"].source = 'FILE'
 
     
+    #should we flip the texture
+    if Uflip:Uaxis=-1.0
+    else:Uaxis=1.0
+    if Vflip:Vaxis=-1.0
+    else:Uaxis=1.0
+    #mapping nodes
+    nlinks.append([(6,2,0),(6,0,0)])
+    nlinks.append([(6,2,0),(6,1,0)])
+    
+    
+    
+    
     #6 images lanes
     lanes.append([('ShaderNodeTexImage',{'image':"default_trail_texture.png"}),
-    ('ShaderNodeTexImage',{'image':"default_trail_mask.png"})])
+    ('ShaderNodeTexImage',{'image':"default_trail_mask.png"}),
+    ('ShaderNodeMapping',{3:(Uaxis,Vaxis,1.0)})
+    ])
     nlinks.append([(6,0,0),(7,0,7)])
     nlinks.append([(6,1,0),(7,0,6)])
+    
+    
+    
+    
+    
 
     #7
     lanes.append([('ShaderNodeMix',{'data_type':'RGBA','bt':'MULTIPLY'})])
@@ -257,12 +276,20 @@ def add_material(self,context):
                 input =l[i][2]
                 link(node1.outputs[output],node2.inputs[input])    
         
-    
+    trailshader.blend_method='BLEND'
     
     material_output.location=(400,0)
+    
+    return trailshader
     #ts.node_tree.nodes.add('name') "do an add and look at the type='name'"
 
-
+def UVOrientate(self,context):
+    
+    
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.cube_project()
+    
 def add_trailPlane(self, context,divisions=2,height=2):
     subdivision_edge_factor=0.999
     
@@ -298,15 +325,67 @@ def add_trailPlane(self, context,divisions=2,height=2):
         #notes: starting edge index seems to be unaffected by amount of edges interstingly
 
     #rotate the the uv's so that its divided along the U axis.
-    bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.transform.rotate(value=1.5708, orient_axis='Z', orient_type='VIEW', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='VIEW', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
-
-    #exit
-    bpy.ops.object.editmode_toggle()
+    UVOrientate(self,context)
+    
+    newmesh=context.selected_objects[0]
+    bpy.ops.object.mode_set(mode='OBJECT')
+    modifier=newmesh.modifiers.new(name='TrailSubdivision',type='SUBSURF')
+    modifier.levels=3
+    modifier.quality=3
+    
+    
+    
     
 
     return context.selected_objects[0]
+
+
+'''
+
+
+equaly distributes bones on the yaxis based on count and dimmension.
+if toggle is on, it will adjusts the heights for better management
+
+'''    
+def EditBoneAdjust(self, context,dimension=(1,1),wave_edit_bones=[],toggle=True):
+    height=dimension[1]
+    length=dimension[0]
     
+    rootheight=height/4
+    baselevel=-height/2
+    maxtip=height/2
+    rightside=length/2
+    leftside=-length/2
+    number_of_bones=len(wave_edit_bones)
+    divisions=(number_of_bones-2)
+    
+    #we want the bone to gradually decrease in size linearly so we set a rate at which it sizes down
+    #incrementation is the space between each bone
+    if divisions>0:
+        incrementation=length/(divisions+1)
+        if toggle:
+            sizedownrate=(height-rootheight)/(divisions+1)
+        else:
+            sizedownrate=0
+    else:
+        incrementation=0
+
+    
+    
+    
+    for i in range(number_of_bones):
+        head=wave_edit_bones[i].head
+        tail=wave_edit_bones[i].tail
+        
+        
+        
+        
+        head.yz=((rightside-i*incrementation),(baselevel))
+        tail.yz=((rightside-i*incrementation),(maxtip-sizedownrate*i))
+        wave_edit_bones[i].select=True
+    return wave_edit_bones
+
+
 
 
 def add_SwordTrailBones(self, context,divisions=2,height=2,length=2):
@@ -325,7 +404,7 @@ def add_SwordTrailBones(self, context,divisions=2,height=2,length=2):
         incrementation=0
         
         
-    bpy.ops.object.armature_add(enter_editmode=True, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    armob=bpy.ops.object.armature_add(enter_editmode=True, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     arm=context.selected_objects[0].data
     arm.display_type='STICK'
     #bpy.ops.object.editmode_toggle()
@@ -339,22 +418,49 @@ def add_SwordTrailBones(self, context,divisions=2,height=2,length=2):
     
     for i in range(number_of_bones):
         bpy.ops.armature.bone_primitive_add()
-       
-        
-        #time.sleep(1)
         trailbone.append(arm.edit_bones[i+1])
         trailbone[i].name=f'trail wave.{i:03}'
-        trailbone[i].head.yz=((rightside-i*incrementation),(baselevel))
-        trailbone[i].tail.yz=((rightside-i*incrementation),(maxtip-sizedownrate*i))
-        trailbone[i].select=True
+        #trailbone[i].head.yz=((rightside-i*incrementation),(baselevel))
+        #trailbone[i].tail.yz=((rightside-i*incrementation),(maxtip-sizedownrate*i))
+        #trailbone[i].select=True
+    
+    trailbone=EditBoneAdjust(self, context,(length,height),trailbone,False)
+    
     
     trailbone[0].parent=trailroot
         
     bpy.ops.object.editmode_toggle()
-    return
+    armob=bpy.context.selected_objects[0]
+    
+
+    return armob
   
 
+def parentBonesToMesh(armature,mesh):
+    #Parent them with automatic weights
+    bpy.ops.object.select_all(action='DESELECT')
+    mesh.select_set(True)
+    armature.select_set(True)
+    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
 
+    
+    
+    '''
+    NoArmatureMod=True
+    for modifier in newmesh.modifiers:
+        if (modifier.type == 'ARMATURE') :
+            modifier.object=armature
+            NoArmatureMod=False
+    if NoArmatureMod:
+        modifier=newmesh.modifiers.new(name='wave armature',type='ARMATURE')
+        modifier.object=armature
+    '''
+'''
+'''    
+
+    
+    
+    
 
     
     
@@ -379,6 +485,10 @@ def add_object(self, context):
     object_data_add(context, mesh, operator=self)
 
 
+
+
+
+
 class OBJECT_OT_add_object(Operator, AddObjectHelper):
     """Create a new Mesh Object"""
     bl_idname = "mesh.add_testplane"
@@ -401,8 +511,8 @@ class OBJECT_OT_add_object(Operator, AddObjectHelper):
         
 
         trailPlane=add_trailPlane(self,context,div,blade_height)
-        add_SwordTrailBones(self,context,div,blade_height,blade_height)
-        
+        bones=add_SwordTrailBones(self,context,div,blade_height,blade_height)
+        parentBonesToMesh(bones,trailPlane)
         
         return {'FINISHED'}
 def debugtest():
@@ -411,12 +521,16 @@ def debugtest():
 # Registration
 
 def add_object_button(self, context):
+    print('add object test')
+    print(OBJECT_OT_add_object.bl_idname)
+    print(self.layout)
     self.layout.operator(
         OBJECT_OT_add_object.bl_idname,
         text="Add Object",
         icon='PLUGIN')
+    
 
-
+'''
 # This allows you to right click on a button and link to documentation
 def add_object_manual_map():
     url_manual_prefix = "https://docs.blender.org/manual/en/latest/"
@@ -424,9 +538,9 @@ def add_object_manual_map():
         ("bpy.ops.mesh.add_object", "scene_layout/object/types.html"),
     )
     return url_manual_prefix, url_manual_mapping
+'''    
     
-    
-    bpy.data.texts['TrialPlaneTest.py']
+    #bpy.data.texts['TrialPlaneTest.py']
 
 
 fp=bpy.data.texts['TrailPlaneTests.py'].filepath
@@ -438,20 +552,25 @@ print(imagefilepath)
 
 
 def register():
+    #bpy.ops.script.reload() 
     script_file=os.path.realpath(__file__)
     print(os.path.dirname(script_file))
+    #print(OBJECT_OT_add_object.bl_idname)
+    
     bpy.utils.register_class(OBJECT_OT_add_object)
-    bpy.utils.register_manual_map(add_object_manual_map)
+    #bpy.utils.register_manual_map(add_object_manual_map)
     bpy.types.VIEW3D_MT_mesh_add.append(add_object_button)
     print("file is")
+    
     
 
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_add_object)
-    bpy.utils.unregister_manual_map(add_object_manual_map)
+    #bpy.utils.unregister_manual_map(add_object_manual_map)
     bpy.types.VIEW3D_MT_mesh_add.remove(add_object_button)
-
 
 if __name__ == "__main__":
     register()
+    
+    
