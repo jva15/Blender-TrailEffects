@@ -1,7 +1,6 @@
 # WIP TrailEffects
 **#WIP**  
-WOOPS! accidentaly pressed enter and commited prematurely.
-Won't be too long before it's alpha though.
+it should work, but I apparantly did the bl_info wrong so its not installable. give me some extra time to fix this.
 If your interested in this projects completion, 
 consider clicking the watch option to stay up to date.
 
