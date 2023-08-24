@@ -1,19 +1,16 @@
-bl_info ={
+'''bl_info ={
     "name": "Trail Tracer",
     "author" : "Geiger(aka jva15)",
     "version": (0,0,9),
     "blender": (3,6,0),
     "category": "Effects",
     "location":"View3D > Toolshelf",
-    "description":"Creates a Trail based on a bone and a preset",
-    }
+'
+    }'''
 
 import bpy
 from bpy.props import *
-import TrailPlaneTests as Generate
-
-
-
+from . import TrailPlaneTests as Generate
 
 class TrailCreationPanel(bpy.types.Panel):
     bl_label="Sword Trail"

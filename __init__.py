@@ -5,13 +5,12 @@ bl_info ={
     "blender": (3,6,0),
     "category": "Effects",
     "location":"View3D > Toolshelf",
-    "description":"A tool that allows for the creation of trails.
-    Access from the Effects tab",
+    "description": "A tool that allows for the creation of trails. Access from the Effects tab"
     }
 import bpy
 
 
-modulesNames = ['TrailCreator', 'TrailPlaneTests']
+modulesNames = ['TrailPlaneTests','TrailCreator']
  
 import sys
 import importlib

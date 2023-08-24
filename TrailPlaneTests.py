@@ -1,16 +1,7 @@
-bl_info = {
-    "name": "TrailPlanTest",
-    "author": "Your Name Here",
-    "version": (1, 0),
-    "blender": (2, 80, 0),
-    "location": "View3D > Add > Mesh > New Object",
-    "description": "Adds a new Mesh Object",
-    "warning": "",
-    "doc_url": "",
-    "category": "Add Mesh",
-}
+
 
 import os
+import sys
 import bpy
 from bpy.types import Operator
 from bpy.props import FloatVectorProperty
@@ -18,6 +9,21 @@ from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from mathutils import Vector
 import time
 import pdb#for pdb.trace()
+
+imagefilepath=''
+def ImageFilePath():
+    if 'DEBUG_MODE' in sys.argv:
+        fp=bpy.data.texts['TrailPlaneTests.py'].filepath
+        
+    else:
+        fp=os.path.realpath(__file__)
+    fa=fp.split('\\')
+    fa=fa[0:len(fa)-1]
+    fp='\\'.join(fa)
+    return fp+'\\images'
+    #print(''+imagefilepath+'is the image file path')
+    #bpy.ops.script.reload() 
+imagefilepath=ImageFilePath()
 
 def add_material(self,context,Uflip=True,Vflip=False):
     
@@ -543,19 +549,21 @@ def add_object_manual_map():
     #bpy.data.texts['TrialPlaneTest.py']
 
 
-fp=bpy.data.texts['TrailPlaneTests.py'].filepath
-fa=fp.split('\\')
-fa=fa[0:len(fa)-1]
-fp='\\'.join(fa)
-imagefilepath=fp+'\\images'
-print(imagefilepath)
+
+    
+
+
 
 
 def register():
-    #bpy.ops.script.reload() 
+    ImageFilePath()
+    
     script_file=os.path.realpath(__file__)
     print(os.path.dirname(script_file))
     #print(OBJECT_OT_add_object.bl_idname)
+    
+    
+    
     
     bpy.utils.register_class(OBJECT_OT_add_object)
     #bpy.utils.register_manual_map(add_object_manual_map)
