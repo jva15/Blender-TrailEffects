@@ -357,28 +357,28 @@ def EditBoneAdjust(self, context,dimension=(1,1),wave_edit_bones=[],toggle=True)
     height=dimension[1]
     length=dimension[0]
     
-    rootheight=height/4
-    baselevel=-height/2
-    maxtip=height/2
-    rightside=length/2
-    leftside=-length/2
+    rootheight=height/4.0
+    baselevel=-height/2.0
+    maxtip=height/2.0
+    rightside=length/2.0
+    leftside=-length/2.0
     number_of_bones=len(wave_edit_bones)
     divisions=(number_of_bones-2)
-    
+    #print("divs are"+str(divisions))
     #we want the bone to gradually decrease in size linearly so we set a rate at which it sizes down
     #incrementation is the space between each bone
     if divisions>0:
         incrementation=length/(divisions+1)
         if toggle:
-            sizedownrate=(height-rootheight)/(divisions+1)
+            sizedownrate=(height-rootheight)/(divisions+1.0)
         else:
-            sizedownrate=0
+            sizedownrate=0.0
     else:
-        incrementation=0
+        incrementation=0.0
 
     
     
-    
+    #print("bonenumb are"+str(number_of_bones))
     for i in range(number_of_bones):
         head=wave_edit_bones[i].head
         tail=wave_edit_bones[i].tail
@@ -388,13 +388,13 @@ def EditBoneAdjust(self, context,dimension=(1,1),wave_edit_bones=[],toggle=True)
         
         head.yz=((rightside-i*incrementation),(baselevel))
         tail.yz=((rightside-i*incrementation),(maxtip-sizedownrate*i))
-        wave_edit_bones[i].select=True
+        #wave_edit_bones[i].select=True
     return wave_edit_bones
 
 
 
 
-def add_SwordTrailBones(self, context,divisions=2,height=2,length=2):
+def add_SwordTrailBones(self, context,divisions,height=2.0,length=2.0):
     rootheight=height/4
     baselevel=-height/2
     maxtip=height/2
@@ -429,6 +429,8 @@ def add_SwordTrailBones(self, context,divisions=2,height=2,length=2):
         #trailbone[i].head.yz=((rightside-i*incrementation),(baselevel))
         #trailbone[i].tail.yz=((rightside-i*incrementation),(maxtip-sizedownrate*i))
         #trailbone[i].select=True
+    
+    print("number of bones are:"+str(len(trailbone)))
     
     trailbone=EditBoneAdjust(self, context,(length,height),trailbone,False)
     
