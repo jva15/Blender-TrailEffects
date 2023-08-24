@@ -10,7 +10,12 @@
 
 import bpy
 from bpy.props import *
-from . import TrailPlaneTests as Generate
+import sys
+
+if 'DEBUG_MODE' in sys.argv:
+    import TrailPlaneTests as Generate
+else:
+    from . import TrailPlaneTests as Generate
 
 class TrailCreationPanel(bpy.types.Panel):
     bl_label="Sword Trail"
@@ -69,7 +74,7 @@ class TrailCreationPanel(bpy.types.Panel):
         
         row = layout.row()
         row.prop(scene,"TrailWidth")
-        
+        row.prop(scene,"DivisionBones")
         row = layout.row()
         
         if (context.object and context.object.mode == 'POSE') and (len(bpy.context.selected_pose_bones) !=0):
@@ -128,15 +133,22 @@ class TrailCreationOperator(bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'} 
     NameOfBones="trail wave"    
     NameOfRoot="trail root"
-    BoneCount=4
     beraseArm=True
     bakeoption=True
-    divisions=BoneCount-2
     
     
     
     
     def execute(self, context):
+        
+        
+        
+        div=bpy.context.scene.DivisionBones
+        print(div)
+        BoneCount=div+2
+        
+        
+        
         #if self.unlocked:
         #print(bpy.context.scene.TrailBones.data)
         #print(bpy.context.scene.TrailMesh)
@@ -149,12 +161,13 @@ class TrailCreationOperator(bpy.types.Operator):
         
         
         makeCopy=False
-        
-        
-        if bpy.context.selected_objects[0] is None:
+        #bpy.context.selected_objects[0]
+        actobj=bpy.context.active_object
+        actobj.select_set(True)
+        if actobj is None:
             print("Error:selected Object is none")
             return
-        if bpy.context.selected_objects[0].type != "ARMATURE":
+        if actobj.type != "ARMATURE":
             print("Error:selected Object is not armature")
             return
         if bpy.context.active_pose_bone is None:
@@ -174,9 +187,9 @@ class TrailCreationOperator(bpy.types.Operator):
         if mode=='GEN':
             print('Generating mesh and bones')
             TrailWidth=bpy.context.scene.TrailWidth
-            bpy.context.scene.TrailMesh=Generate.add_trailPlane(self, context,divisions=self.divisions,height=TrailWidth)
+            bpy.context.scene.TrailMesh=Generate.add_trailPlane(self, context,div,height=TrailWidth)
         
-            bpy.context.scene.TrailBones=Generate.add_SwordTrailBones(self, context,divisions=self.divisions,height=TrailWidth,length=TrailWidth)
+            bpy.context.scene.TrailBones=Generate.add_SwordTrailBones(self, context,div,height=TrailWidth,length=TrailWidth)
         else:
             print('skipped generation')   
         
@@ -265,7 +278,7 @@ class TrailCreationOperator(bpy.types.Operator):
         bpy.ops.pose.select_all(action='DESELECT')
         
         #for each Bone, set a transform constraint
-        for i in range(1,self.BoneCount):#add a transform moddifier to all the bone except the lead
+        for i in range(1,BoneCount):#add a transform moddifier to all the bone except the lead
             con=newarm.pose.bones[NFString(self.NameOfBones,i)].constraints.new(type='COPY_TRANSFORMS')
             con.target=newarm
             #con.subtarget=newarm.pose.bones[self.NameOfBones]
@@ -289,7 +302,7 @@ class TrailCreationOperator(bpy.types.Operator):
         #select the waves nodes and start bakin!
         #select
         bpy.ops.pose.select_all(action='DESELECT')#deselect all
-        for i in range(self.BoneCount):
+        for i in range(BoneCount):
             newarm.pose.bones[NFString(self.NameOfBones,i)].bone.select=True
             
         #plug values    
@@ -301,7 +314,7 @@ class TrailCreationOperator(bpy.types.Operator):
         
         #shift them all by the length
         timeconstant=1*bpy.context.scene.TrailFrameLength
-        for i in range(self.BoneCount):
+        for i in range(BoneCount):
             bpy.ops.pose.select_all(action='DESELECT')#deselect all
             
             newarm.pose.bones[NFString(self.NameOfBones,i)].bone.select=True
@@ -362,12 +375,13 @@ def register():
         #('Stretch',"Sample a piece of geometry, subdivide")
         ]
     )
+    '''
     bpy.types.Scene.TrailMaterialUVenum=EnumProperty(
         name='UV axis',
         default='U',
         description='determines axis the cuts are made along',
         items=[('U','U Axis',""),('V','V Axis',"")]
-    )
+    )'''
     
     
     
@@ -405,6 +419,12 @@ def register():
         default=2.0
     )
     
+    bpy.types.Scene.DivisionBones=IntProperty(
+        name='Bone Resolution',
+        description="how many bones to put along the trail",
+        default=8
+    )
+    
     bpy.utils.register_class(TrailCreationOperator)
     bpy.utils.register_class(TrailCreationPanel)
     #TrailPlaneTests.debugtest()
@@ -413,10 +433,16 @@ def unregister():
     bpy.utils.unregister_class(TrailCreationPanel)
     bpy.utils.unregister_class(TrailCreationOperator)
     
-    
     del bpy.types.Scene.TrailBones
     del bpy.types.Scene.TrailMesh
     del bpy.types.Scene.TT_Trail_Mode_Enum
+    del bpy.types.Scene.TrailWidth
+    del bpy.types.Scene.VFlip
+    del bpy.types.Scene.UFlip
+    del bpy.types.Scene.Trailstartframe
+    del bpy.types.Scene.Trailendframe
+    del bpy.types.Scene.TrailFrameLength
+    del bpy.types.Scene.DivisionBones
 
 if __name__ == "__main__":
     register()
