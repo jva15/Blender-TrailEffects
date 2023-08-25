@@ -11,7 +11,7 @@ To use:
   2. Switch to pose mode and click the bone you want to trace after.
   3. Select a mode: (Generate is the only one available at the moment)
   4. Once everything is to your liking, click 'SwordTrail' (yea, i just realized that i need to change the names)
-  5. a trail will be an armature will be generated and baked as a seperate armature
+  5. a trail armature will be generated and baked as a seperate armature
 You can also change the material if you'd rather use a different one. just keep in mind that the U(x axis) of the default textures are
 flipped incase your thinking of using that as a reference or base.
 
