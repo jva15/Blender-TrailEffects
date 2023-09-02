@@ -1,7 +1,7 @@
 bl_info ={
     "name": "Trail Tracer",
     "author" : "Geiger(aka jva15)",
-    "version": (0,0,9),
+    "version": (0,1,1),
     "blender": (3,6,0),
     "category": "Effects",
     "location":"View3D > Toolshelf",
