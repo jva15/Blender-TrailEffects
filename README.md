@@ -10,12 +10,17 @@ To use:
 You can also change the material if you'd rather use a different one. just keep in mind that the U(x axis) of the default textures are
 flipped incase your thinking of using that as a reference or base.
 ## UPDATE 0.1.1
-  fixed a bug that caused bones to excessively space out.
-  now framelength pertains to the frame length of the trail instead of per bone.
-  change fremlength to a float which fixed problems with inaccuracies
-  adding bones distributes across the length like it should now.
-  you can now create trails more intuitively. you can change the bone resolution, framelength, and trailwidth and preview your changes.
-  added a bake mode that uses the current frame as the end frame.
+  1.fixed a bug that caused bones to excessively space out.
+  
+  2.now framelength pertains to the frame length of the trail instead of per bone.
+
+  3.change fremlength to a float which fixed problems with inaccuracies
+  
+  4.adding bones distributes across the length like it should now.
+  
+  5.you can now create trails more intuitively. you can change the bone resolution, framelength, and trailwidth and preview your changes.
+  
+  6.added a bake mode that uses the current frame as the end frame.
   
 
 
