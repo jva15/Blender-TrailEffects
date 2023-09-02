@@ -1,7 +1,7 @@
 '''bl_info ={
     "name": "Trail Tracer",
     "author" : "Geiger(aka jva15)",
-    "version": (0,0,9),
+    "version": (0,1,1),
     "blender": (3,6,0),
     "category": "Effects",
     "location":"View3D > Toolshelf",
@@ -17,23 +17,43 @@ if 'DEBUG_MODE' in sys.argv:
 else:
     from . import TrailPlaneTests as Generate
 
+#operators bake draw
+def bake_draw(layout):
+    scene=bpy.context.scene
+    bmode=scene.TT_Bake_Mode_Enum
+    row = layout.row(align=True)
+    row.prop(scene,"TT_Bake_Mode_Enum")
+    match bmode:
+        case 'MR':
+            
+            row = layout.row(align=True)
+            row.prop(scene, "Trailstartframe")
+            row.prop(scene, "Trailendframe")
+            row.prop(scene, "TrailStep")
+            row = layout.row()
+        case 'CU':
+            row = layout.row(align=True)
+            #row.prop(scene,"StartBool")
+            #if scene.StartBool==True:
+            #    row.prop(scene, "Trailstartframe")
+            row = layout.row(align=True)
+            row.prop(scene, "TrailStep")
+            #todo: maybe merge with MR using booleans
+        case _:
+            return
+
+
 class TrailCreationPanel(bpy.types.Panel):
-    bl_label="Sword Trail"
+    bl_label="Create Trail"
     bl_idname = "VIEW_3D_PT_SwordTrailPrototype"
     bl_space_type="VIEW_3D"
     bl_region_type='UI'
     bl_category = 'Effects'
     
     
+        
+        
     
-    #mode=testenum
-    Testnumber: FloatProperty(
-        idname="Testnumber",
-        name= "just a number",
-        description="A numba is me",
-        default=0.0,
-        min=0.0
-    )
     def draw(self,context):
         layout = self.layout
         scene = context.scene
@@ -72,9 +92,9 @@ class TrailCreationPanel(bpy.types.Panel):
         
             
         
-        row = layout.row()
-        row.prop(scene,"TrailWidth")
-        row.prop(scene,"DivisionBones")
+        #row = layout.row()
+        #row.prop(scene,"TrailWidth")
+        #row.prop(scene,"DivisionBones")
         row = layout.row()
         
         if (context.object and context.object.mode == 'POSE') and (len(bpy.context.selected_pose_bones) !=0):
@@ -84,13 +104,9 @@ class TrailCreationPanel(bpy.types.Panel):
         
             
             
-                
-        #else self.mode==
         
-        
-        #row = layout.row(align=True)
-        
-        
+        bake_draw(layout)
+        '''
         layout.label(text=" Bake Range :")
         row = layout.row(align=True)
         
@@ -100,35 +116,24 @@ class TrailCreationPanel(bpy.types.Panel):
         
         row = layout.row()
         row.prop(scene, "TrailFrameLength")
-        row = layout.row()
+        row = layout.row()'''
        
 def duplicate(obj, data=True, actions=True, collection=None):
     obj_copy = obj.copy()
     collection=bpy.context.view_layer.active_layer_collection.collection
     if data:
         obj_copy.data = obj_copy.data.copy()
-    #if actions and obj_copy.animation_data:
-    #    obj_copy.animation_data.action = obj_copy.animation_data.action.copy()
+    
     collection.objects.link(obj_copy)
     return obj_copy
 
-def Phase1():
-    
-    return 
-
-def Phase2(obj):
-    bpy.ops.object.posemode_toggle()
-    
 def NFString(str1,num):
-    #if num==0:
-    #    return str1
-    #else:
     return str1+'.'+str(num).zfill(3)
 
 
 
 class TrailCreationOperator(bpy.types.Operator):
-    bl_label="SwordTrail"
+    bl_label="Create Trail"
     bl_idname="object.strails"
     bl_options = {'REGISTER','UNDO'} 
     NameOfBones="trail wave"    
@@ -137,23 +142,60 @@ class TrailCreationOperator(bpy.types.Operator):
     bakeoption=True
     
     
+    TrailFrameLength:FloatProperty(
+        name="Frame Length",
+        description="Frame length for each node to be pushed back",
+        default=1.0,
+        min=0.0,max=100.0,
+    )
+    TrailWidth:FloatProperty(
+        name='Trail Width',
+        description="width of the trail",
+        default=2.0,
+    )
+    
+    DivisionBones:IntProperty(
+        name='Bone Resolution',
+        description="how many bones to put along the trail",
+        default=8,
+        max=50,
+        min=0,
+    )
+    BakeStart:IntProperty(
+        name='Bake Start',
+        description="alternative to bake start",
+        default=0,min=0
+    )
+    
+    def draw(self,context):
+        layout = self.layout
+        scene = context.scene
+        bmode=scene.TT_Bake_Mode_Enum
+        
+        row=layout.row()
+        row.prop(self, "TrailWidth")
+        row.prop(self, "TrailFrameLength")
+        row = layout.row()
+
+        row.prop(self, "DivisionBones")
+        row = layout.row()
+        if bmode=='CU':
+            row.prop(self,"BakeStart")
+        
+        
+        return
     
     
     def execute(self, context):
         
         
         
-        div=bpy.context.scene.DivisionBones
+        div=self.DivisionBones
+        
         print(div)
         BoneCount=div+2
         
-        
-        
-        #if self.unlocked:
-        #print(bpy.context.scene.TrailBones.data)
-        #print(bpy.context.scene.TrailMesh)
-        #bpy.context.scene.TrailBones.armature_add()
-        
+                
         ts=bpy.context.scene.tool_settings
         
         autokey=ts.use_keyframe_insert_auto
@@ -161,7 +203,6 @@ class TrailCreationOperator(bpy.types.Operator):
         
         
         makeCopy=False
-        #bpy.context.selected_objects[0]
         actobj=bpy.context.active_object
         actobj.select_set(True)
         if actobj is None:
@@ -185,8 +226,9 @@ class TrailCreationOperator(bpy.types.Operator):
         
         mode=bpy.context.scene.TT_Trail_Mode_Enum
         if mode=='GEN':
-            print('Generating mesh and bones')
-            TrailWidth=bpy.context.scene.TrailWidth
+            #print('Generating mesh and bones')
+            #TrailWidth=bpy.context.scene.TrailWidth
+            TrailWidth=self.TrailWidth
             bpy.context.scene.TrailMesh=Generate.add_trailPlane(self, context,div,height=TrailWidth)
         
             bpy.context.scene.TrailBones=Generate.add_SwordTrailBones(self, context,div,height=TrailWidth,length=TrailWidth)
@@ -199,13 +241,6 @@ class TrailCreationOperator(bpy.types.Operator):
         if bpy.context.scene.TrailMesh is None:
             print("Error:No Trail Mesh")
             return
-        
-        
-        #elif mode='LEG':
-        
-        
-        
-            
         
         
         #duplicate
@@ -254,7 +289,7 @@ class TrailCreationOperator(bpy.types.Operator):
             Generate.parentBonesToMesh(newarm,newmesh)
             newmesh.modifiers.move(0,1)
     
-        if mode=='LEG':
+        elif mode=='LEG':
             #link the mesh to armature
             if self.beraseArm:
                 NoArmatureMod=True
@@ -300,29 +335,55 @@ class TrailCreationOperator(bpy.types.Operator):
         #ok now the transformations are set
         
         #select the waves nodes and start bakin!
+        bmode=bpy.context.scene.TT_Bake_Mode_Enum
+        
+        
         #select
         bpy.ops.pose.select_all(action='DESELECT')#deselect all
+        newarm.pose.bones['trail root'].bone.select=True
         for i in range(BoneCount):
             newarm.pose.bones[NFString(self.NameOfBones,i)].bone.select=True
+        #
             
-        #plug values    
-        bakestart=bpy.context.scene.Trailstartframe
-        bakeend=bpy.context.scene.Trailendframe
+           
+           
+            
+        #plug values
+        match bmode:
+            case 'CU':
+                bakeend=bpy.context.scene.frame_current
+                bakestart=self.BakeStart
+            case 'MR':
+                bakestart=bpy.context.scene.Trailstartframe
+                bakeend=bpy.context.scene.Trailendframe
+        
+        framestep=bpy.context.scene.TrailStep
+        if bakestart==None:
+            bakestart=0
+        
         #BakeOperation
-        bpy.ops.nla.bake(frame_start=bakestart, frame_end=bakeend, visual_keying=True, clear_constraints=True, bake_types={'POSE'})
+        bpy.ops.nla.bake(frame_start=bakestart, frame_end=bakeend,step=framestep, visual_keying=True, clear_constraints=True, bake_types={'POSE'})
         
         
         #shift them all by the length
-        timeconstant=1*bpy.context.scene.TrailFrameLength
+        timeconstant=1*(self.TrailFrameLength/(BoneCount-1))
+        #timeconstant=1*(bpy.context.scene.TrailFrameLength/(BoneCount-1))
         for i in range(BoneCount):
             bpy.ops.pose.select_all(action='DESELECT')#deselect all
             
             newarm.pose.bones[NFString(self.NameOfBones,i)].bone.select=True
             
             #bpy.ops.transform.transform(mode='TIME_TRANSLATE', value=(timeconstant*i, 0, 0, 0), orient_axis='Z', orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
-            #shift the bones by their fcurves
+            '''shift the bones by their fcurves 
+            'i' is the bone index. since all the curves are stored
+            in one big array we have to skip by 10 which is
+            the number of elements bones typically have for transforms.
+            since i don't want to shift the root, it starts at a +10 
+            to skip it. lastly 'a' is used to index into the elements.
+            none of the bones have anything other than 10.
+            '''
             for a in range(0,10):
-                curvslot=a+i*10
+                curvslot=a+i*10+10
                 curve=newarm.animation_data.action.fcurves[curvslot]
                 
                 if timeconstant>0:
@@ -356,6 +417,14 @@ def filter_mesh_objects(self, object):
     return object.type == 'MESH'
 def filter_amature_objects(self,object):
     return object.type == 'ARMATURE'
+def testupdate(self,context):
+    print("updating updating updating")
+
+
+    
+
+
+
 
 def register():
     bpy.types.Scene.TrailBones = PointerProperty(type=bpy.types.Object,poll=filter_amature_objects)
@@ -375,6 +444,19 @@ def register():
         #('Stretch',"Sample a piece of geometry, subdivide")
         ]
     )
+    
+    bpy.types.Scene.TT_Bake_Mode_Enum= EnumProperty(
+        name="Bake Mode",
+        default='CU',
+        
+        description="",
+        items=[#('Buttons','Advanced',"advanced options"),
+        ('MR','ManualRange', "use existing one and make a copy. supposed to be more flexible than legacy"),
+        ('CU','Cursor',"uses cursor and framelength to determine frame length"),
+        ]
+    )
+    
+    
     '''
     bpy.types.Scene.TrailMaterialUVenum=EnumProperty(
         name='UV axis',
@@ -394,14 +476,20 @@ def register():
     bpy.types.Scene.Trailendframe= IntProperty(
         name="EndFrame",
         description="The Frame The Bake ends",
-        default=250
+        default=60
     
     )
-    bpy.types.Scene.TrailFrameLength=IntProperty(
-        name="Frame Length",
-        description="Frame length for each node to be pushed back",
-        default=1
     
+    bpy.types.Scene.TrailStep= IntProperty(
+        name="Trail Step Frames",
+        description="Frames per Key",
+        default=1
+    )
+    
+    bpy.types.Scene.StartBool=BoolProperty(
+        name="Start?",
+        description="enable use of StartFrame",
+        default=False
     )
     bpy.types.Scene.UFlip=BoolProperty(
         name="UFlip",
@@ -413,6 +501,23 @@ def register():
         description="Flip the Texture on it V axis",
         default=False
     )
+    
+    
+    
+    
+    
+    '''
+    teh following may be depreciated
+    
+   
+    bpy.types.Scene.TrailFrameLength=bpy.props.FloatProperty(
+        name="Frame Length",
+        description="Frame length for each node to be pushed back",
+        default=1.0,
+        update=testupdate
+    
+    )
+    
     bpy.types.Scene.TrailWidth=FloatProperty(
         name='Trail Width',
         description="width of the trail",
@@ -424,7 +529,7 @@ def register():
         description="how many bones to put along the trail",
         default=8
     )
-    
+     '''
     bpy.utils.register_class(TrailCreationOperator)
     bpy.utils.register_class(TrailCreationPanel)
     #TrailPlaneTests.debugtest()
@@ -436,13 +541,13 @@ def unregister():
     del bpy.types.Scene.TrailBones
     del bpy.types.Scene.TrailMesh
     del bpy.types.Scene.TT_Trail_Mode_Enum
-    del bpy.types.Scene.TrailWidth
+    #del bpy.types.Scene.TrailWidth
     del bpy.types.Scene.VFlip
     del bpy.types.Scene.UFlip
     del bpy.types.Scene.Trailstartframe
     del bpy.types.Scene.Trailendframe
-    del bpy.types.Scene.TrailFrameLength
-    del bpy.types.Scene.DivisionBones
+    #del bpy.types.Scene.TrailFrameLength
+    #del bpy.types.Scene.DivisionBones
 
 if __name__ == "__main__":
     register()
