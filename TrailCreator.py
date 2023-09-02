@@ -44,7 +44,7 @@ def bake_draw(layout):
 
 
 class TrailCreationPanel(bpy.types.Panel):
-    bl_label="Create Trail"
+    bl_label="Trail Tracer"
     bl_idname = "VIEW_3D_PT_SwordTrailPrototype"
     bl_space_type="VIEW_3D"
     bl_region_type='UI'
