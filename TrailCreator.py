@@ -1,7 +1,7 @@
 '''bl_info ={
     "name": "Trail Tracer",
     "author" : "Geiger(aka jva15)",
-    "version": (0,0,9),
+    "version": (0,0,98),
     "blender": (3,6,0),
     "category": "Effects",
     "location":"View3D > Toolshelf",
@@ -18,22 +18,12 @@ else:
     from . import TrailPlaneTests as Generate
 
 class TrailCreationPanel(bpy.types.Panel):
-    bl_label="Sword Trail"
+    bl_label="Create Trail"
     bl_idname = "VIEW_3D_PT_SwordTrailPrototype"
     bl_space_type="VIEW_3D"
     bl_region_type='UI'
     bl_category = 'Effects'
     
-    
-    
-    #mode=testenum
-    Testnumber: FloatProperty(
-        idname="Testnumber",
-        name= "just a number",
-        description="A numba is me",
-        default=0.0,
-        min=0.0
-    )
     def draw(self,context):
         layout = self.layout
         scene = context.scene
@@ -97,10 +87,10 @@ class TrailCreationPanel(bpy.types.Panel):
         row.prop(scene, "Trailstartframe")
         row.prop(scene, "Trailendframe")
         row = layout.row()
-        
+        '''
         row = layout.row()
         row.prop(scene, "TrailFrameLength")
-        row = layout.row()
+        row = layout.row()'''
        
 def duplicate(obj, data=True, actions=True, collection=None):
     obj_copy = obj.copy()
@@ -112,13 +102,6 @@ def duplicate(obj, data=True, actions=True, collection=None):
     collection.objects.link(obj_copy)
     return obj_copy
 
-def Phase1():
-    
-    return 
-
-def Phase2(obj):
-    bpy.ops.object.posemode_toggle()
-    
 def NFString(str1,num):
     #if num==0:
     #    return str1
@@ -136,14 +119,48 @@ class TrailCreationOperator(bpy.types.Operator):
     beraseArm=True
     bakeoption=True
     
+    #TrailFrameLength=bpy.types.Scene.TrailFrameLength
     
+    #:bpy.context.scene.TrailFrameLength
+    
+    TrailFrameLength:bpy.props.FloatProperty(
+        name="Frame Length",
+        description="Frame length for each node to be pushed back",
+        default=1.0,
+        min=0,max=10000,
+    )
+    TrailWidth:FloatProperty(
+        name='Trail Width',
+        description="width of the trail",
+        default=2.0,
+    )
+    
+    DivisionBones:IntProperty(
+        name='Bone Resolution',
+        description="how many bones to put along the trail",
+        default=8,
+        max=50,
+    )
+    def draw(self,context):
+        layout = self.layout
+        scene = context.scene
+        row=layout.row()
+        row.prop(self, "TrailWidth")
+        row.prop(self, "TrailFrameLength")
+        row = layout.row()
+
+        row.prop(self, "DivisionBones")
+        row = layout.row()
+        return
     
     
     def execute(self, context):
         
         
         
-        div=bpy.context.scene.DivisionBones
+        #div=bpy.context.scene.DivisionBones
+        div=self.DivisionBones
+        
         print(div)
         BoneCount=div+2
         
@@ -185,8 +202,9 @@ class TrailCreationOperator(bpy.types.Operator):
         
         mode=bpy.context.scene.TT_Trail_Mode_Enum
         if mode=='GEN':
-            print('Generating mesh and bones')
-            TrailWidth=bpy.context.scene.TrailWidth
+            #print('Generating mesh and bones')
+            #TrailWidth=bpy.context.scene.TrailWidth
+            TrailWidth=self.TrailWidth
             bpy.context.scene.TrailMesh=Generate.add_trailPlane(self, context,div,height=TrailWidth)
         
             bpy.context.scene.TrailBones=Generate.add_SwordTrailBones(self, context,div,height=TrailWidth,length=TrailWidth)
@@ -313,7 +331,8 @@ class TrailCreationOperator(bpy.types.Operator):
         
         
         #shift them all by the length
-        timeconstant=1*bpy.context.scene.TrailFrameLength
+        timeconstant=1*(self.TrailFrameLength/(BoneCount-1))
+        #timeconstant=1*(bpy.context.scene.TrailFrameLength/(BoneCount-1))
         for i in range(BoneCount):
             bpy.ops.pose.select_all(action='DESELECT')#deselect all
             
@@ -356,6 +375,11 @@ def filter_mesh_objects(self, object):
     return object.type == 'MESH'
 def filter_amature_objects(self,object):
     return object.type == 'ARMATURE'
+def testupdate(self,context):
+    print("updating updating updating")
+
+
+
 
 def register():
     bpy.types.Scene.TrailBones = PointerProperty(type=bpy.types.Object,poll=filter_amature_objects)
@@ -397,12 +421,7 @@ def register():
         default=250
     
     )
-    bpy.types.Scene.TrailFrameLength=IntProperty(
-        name="Frame Length",
-        description="Frame length for each node to be pushed back",
-        default=1
     
-    )
     bpy.types.Scene.UFlip=BoolProperty(
         name="UFlip",
         description="Flip the Texture on it V axis",
@@ -413,6 +432,23 @@ def register():
         description="Flip the Texture on it V axis",
         default=False
     )
+    
+    
+    
+    
+    
+    '''
+    teh following may be depreciated
+    
+   
+    bpy.types.Scene.TrailFrameLength=bpy.props.FloatProperty(
+        name="Frame Length",
+        description="Frame length for each node to be pushed back",
+        default=1.0,
+        update=testupdate
+    
+    )
+    
     bpy.types.Scene.TrailWidth=FloatProperty(
         name='Trail Width',
         description="width of the trail",
@@ -424,7 +460,7 @@ def register():
         description="how many bones to put along the trail",
         default=8
     )
-    
+     '''
     bpy.utils.register_class(TrailCreationOperator)
     bpy.utils.register_class(TrailCreationPanel)
     #TrailPlaneTests.debugtest()
@@ -436,13 +472,13 @@ def unregister():
     del bpy.types.Scene.TrailBones
     del bpy.types.Scene.TrailMesh
     del bpy.types.Scene.TT_Trail_Mode_Enum
-    del bpy.types.Scene.TrailWidth
+    #del bpy.types.Scene.TrailWidth
     del bpy.types.Scene.VFlip
     del bpy.types.Scene.UFlip
     del bpy.types.Scene.Trailstartframe
     del bpy.types.Scene.Trailendframe
-    del bpy.types.Scene.TrailFrameLength
-    del bpy.types.Scene.DivisionBones
+    #del bpy.types.Scene.TrailFrameLength
+    #del bpy.types.Scene.DivisionBones
 
 if __name__ == "__main__":
     register()
