@@ -14,7 +14,7 @@ flipped incase your thinking of using that as a reference or base.
   
   2.now framelength pertains to the frame length of the trail instead of per bone.
 
-  3.change fremlength to a float which fixed problems with inaccuracies
+  3.changed framelength to a float which fixed problems with inaccuracies among the trail bones
   
   4.adding bones distributes across the length like it should now.
   
