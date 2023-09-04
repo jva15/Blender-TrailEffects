@@ -24,13 +24,7 @@ flipped incase your thinking of using that as a reference or base.
   
 
 
-
-
-
-
-
-there are quite afew kinks and bugs to work out though and ease of use features are currently on the way on a bi-tri daily basis
-so stay tuned and be prepared to either wait it out or clone alot. 
+there are quite afew kinks and bugs to work out though and ease of use features are currently on the way so stay tuned. 
 
 If your interested in this projects completion, 
 consider clicking the watch option to stay up to date.
@@ -41,5 +35,6 @@ https://www.youtube.com/watch?v=bzwp-ng-f1Y
 please understand that this is a work in progress and updates to core functionalities will be
 frequent.
 but when it's done, it'll be as easy as copy and pasting
+
 please free to report any problems including crashes, bugs etc. 
 also post any 'missed opportunities' and things you'd like to see in the issues section aswell.
